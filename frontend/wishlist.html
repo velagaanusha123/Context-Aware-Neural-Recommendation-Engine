@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>H&M – Wishlist</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-title {
+      font-size: 22px;
+      font-weight: 600;
+      padding: 24px 30px 0;
+    }
+    .item-count {
+      font-size: 13px;
+      color: #888;
+      padding: 6px 30px 0;
+    }
+    .remove-btn {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+      margin-top: 8px;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .remove-btn:hover { background: #E50010; color: white; border-color: #E50010; }
+    .empty-state {
+      text-align: center;
+      padding: 80px 30px;
+      color: #888;
+    }
+    .empty-state h3 { font-size: 20px; margin-bottom: 10px; color: #444; }
+    .empty-state a {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: #E50010;
+      color: white;
+      text-decoration: none;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <h1>H&M</h1>
+    <div>
+      <a href="home.html">Products</a>
+      <a href="recommendations.html">For You</a>
+      <a href="login.html" onclick="logout()">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-title">My Wishlist</div>
+  <div class="item-count" id="item-count"></div>
+  <div class="product-grid" id="wishlist-grid"></div>
+
+<script>
+  const user = JSON.parse(localStorage.getItem('currentUser'));
+  if (!user) { window.location.href = 'login.html'; }
+
+  function getWishlist() {
+    return JSON.parse(localStorage.getItem('wishlist')) || [];
+  }
+
+  function removeItem(productId) {
+    let wishlist = getWishlist();
+    wishlist = wishlist.filter(w => w.id !== productId);
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    renderWishlist(); // re-render after removal
+  }
+
+  function renderWishlist() {
+    const wishlist = getWishlist();
+    const grid     = document.getElementById('wishlist-grid');
+    const countEl  = document.getElementById('item-count');
+    grid.innerHTML = '';
+
+    countEl.textContent = wishlist.length + ' item(s) saved';
+
+    if (wishlist.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <h3>Your wishlist is empty</h3>
+          <p>Save items you love by clicking the heart icon.</p>
+          <a href="home.html">Browse Products</a>
+        </div>`;
+      return;
+    }
+
+    wishlist.forEach(product => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <div class="card-info">
+          <div class="category">${product.category}</div>
+          <h3>${product.name}</h3>
+          <div class="price">₹${product.price}</div>
+          <button class="remove-btn" onclick="removeItem(${product.id})">
+            Remove from Wishlist
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function logout() { localStorage.removeItem('currentUser'); }
+
+  renderWishlist();
+</script>
+
+</body>
+</html>

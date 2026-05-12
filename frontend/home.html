@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>H&M – Home</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-header {
+      background: white;
+      padding: 16px 30px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .welcome-text { font-size: 14px; color: #555; }
+    .filters {
+      padding: 20px 30px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 7px 18px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: #E50010;
+      color: white;
+      border-color: #E50010;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      padding: 20px 30px 0;
+    }
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #222;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <h1>H&M</h1>
+    <div>
+      <span id="nav-username" style="margin-right:16px; font-size:14px;"></span>
+      <a href="wishlist.html">Wishlist ♡</a>
+      <a href="recommendations.html">For You</a>
+      <a href="login.html" onclick="logout()">Logout</a>
+    </div>
+  </div>
+
+  <!-- Welcome bar -->
+  <div class="page-header">
+    <span class="welcome-text" id="welcome-msg">Welcome back!</span>
+    <span style="font-size:13px; color:#888;">Free shipping on orders above ₹999</span>
+  </div>
+
+  <!-- Category filters -->
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="filterProducts('All', this)">All</button>
+    <button class="filter-btn" onclick="filterProducts('Shirts', this)">Shirts</button>
+    <button class="filter-btn" onclick="filterProducts('Trousers', this)">Trousers</button>
+    <button class="filter-btn" onclick="filterProducts('Dresses', this)">Dresses</button>
+    <button class="filter-btn" onclick="filterProducts('Jackets', this)">Jackets</button>
+  </div>
+
+  <div class="section-title">All Products</div>
+
+  <!-- Product grid -->
+  <div class="product-grid" id="product-grid"></div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+<script src="js/mockdata.js"></script>
+<script>
+  // Show username in navbar
+  const user = JSON.parse(localStorage.getItem('currentUser'));
+  if (!user) { window.location.href = 'login.html'; }
+  else {
+    document.getElementById('nav-username').textContent = 'Hi, ' + user.name;
+    document.getElementById('welcome-msg').textContent  = 'Welcome back, ' + user.name + '!';
+  }
+
+  // Load wishlist from localStorage
+  function getWishlist() {
+    return JSON.parse(localStorage.getItem('wishlist')) || [];
+  }
+
+  // Render product cards
+  function renderProducts(list) {
+    const grid     = document.getElementById('product-grid');
+    const wishlist = getWishlist();
+    grid.innerHTML = '';
+
+    if (list.length === 0) {
+      grid.innerHTML = '<p style="padding:30px;color:#888;">No products found.</p>';
+      return;
+    }
+
+    list.forEach(product => {
+      const isWishlisted = wishlist.some(w => w.id === product.id);
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <div class="card-info">
+          <button class="heart-btn ${isWishlisted ? 'active' : ''}"
+                  onclick="toggleWishlist(${product.id})"
+                  id="heart-${product.id}">
+            ${isWishlisted ? '♥' : '♡'}
+          </button>
+          <div class="category">${product.category}</div>
+          <h3>${product.name}</h3>
+          <div class="price">₹${product.price}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Filter by category
+  function filterProducts(category, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = category === 'All'
+      ? products
+      : products.filter(p => p.category === category);
+    renderProducts(filtered);
+  }
+
+  // Add or remove from wishlist
+  function toggleWishlist(productId) {
+    let wishlist = getWishlist();
+    const product = products.find(p => p.id === productId);
+    const index   = wishlist.findIndex(w => w.id === productId);
+    const heartBtn = document.getElementById('heart-' + productId);
+
+    if (index === -1) {
+      wishlist.push(product);
+      heartBtn.textContent = '♥';
+      heartBtn.classList.add('active');
+      showToast('Added to Wishlist!');
+    } else {
+      wishlist.splice(index, 1);
+      heartBtn.textContent = '♡';
+      heartBtn.classList.remove('active');
+      showToast('Removed from Wishlist');
+    }
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }
+
+  // Toast popup message
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  function logout() {
+    localStorage.removeItem('currentUser');
+  }
+
+  // Initial render
+  renderProducts(products);
+</script>
+
+</body>
+</html>
