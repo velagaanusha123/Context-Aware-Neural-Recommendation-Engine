@@ -12,9 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 </head>
 
 <body>
+
 
   <!-- ─── HEADER ─── -->
   <header class="header">
@@ -106,6 +108,8 @@
       <div class="tabs">
         <button class="tab active" id="tab-recs" onclick="switchTab('recs')">Recommendations</button>
         <button class="tab" id="tab-browse" onclick="switchTab('browse')">Browse Catalogue</button>
+        <button class="tab" id="tab-analytics" onclick="switchTab('analytics')">Analytics Dashboard</button>
+        <button class="tab" id="tab-train" onclick="switchTab('train')">Model Management</button>
       </div>
 
       <!-- Recommendations grid -->
@@ -134,6 +138,49 @@
           <button class="btn-ghost" id="cat-prev" onclick="changePage(-1)">← Prev</button>
           <span id="cat-page">Page 1</span>
           <button class="btn-ghost" id="cat-next" onclick="changePage(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- Analytics panel -->
+      <div id="panel-analytics" class="hidden">
+        <div class="analytics-header">
+            <div class="stat-box">
+                <h4 id="count-users">0</h4>
+                <p>Unique Users</p>
+            </div>
+            <div class="stat-box">
+                <h4 id="count-items">0</h4>
+                <p>Unique Items</p>
+            </div>
+            <div class="stat-box">
+                <h4 id="count-interactions">0</h4>
+                <p>Interactions</p>
+            </div>
+        </div>
+        <div class="chart-container grid-charts">
+            <div id="chart-seasonal" class="chart"></div>
+            <div id="chart-user" class="chart"></div>
+        </div>
+      </div>
+
+      <!-- Training panel -->
+      <div id="panel-train" class="hidden">
+        <div class="card training-card">
+            <h3>🧠 Neural Model Training</h3>
+            <p>Retrain the Neural Collaborative Filtering model using the latest interaction data.</p>
+            <div class="training-info">
+                <span>Epochs: 3</span>
+                <span>Batch Size: 256</span>
+            </div>
+            <button class="btn-primary" id="train-btn" onclick="triggerTraining()">
+                <span>🚀 Start Model Training</span>
+            </button>
+            <div id="train-progress-container" class="hidden">
+                <div class="progress-bar-wrap">
+                    <div id="train-progress-fill" class="progress-fill"></div>
+                </div>
+                <p id="train-status">Initializing...</p>
+            </div>
         </div>
       </div>
 

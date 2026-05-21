@@ -5,30 +5,28 @@
 const API = "http://127.0.0.1:8000";
 
 const GARMENT_ICONS = {
-  "Jersey Basic":       "👕",
-  "Knitwear":           "🧶",
-  "Dresses Ladies":     "👗",
-  "Trousers":           "👖",
-  "Shorts":             "🩳",
-  "Skirts":             "🩴",
-  "Outdoor":            "🧥",
-  "Accessories":        "👜",
-  "Socks & Tights":     "🧦",
-  "Shoes":              "👟",
-  "Swimwear":           "🩱",
-  "Underwear":          "🩲",
-  "Nightwear":          "🌙",
-  "Bags":               "👜",
-  "Hats & Scarves":     "🧣",
+  "Jersey Basic": "👕",
+  "Knitwear": "🧶",
+  "Dresses Ladies": "👗",
+  "Trousers": "👖",
+  "Shorts": "🩳",
+  "Skirts": "🩴",
+  "Outdoor": "🧥",
+  "Accessories": "👜",
+  "Socks & Tights": "🧦",
+  "Shoes": "👟",
+  "Swimwear": "🩱",
+  "Underwear": "🩲",
+  "Nightwear": "🌙",
+  "Bags": "👜",
+  "Hats & Scarves": "🧣",
 };
 
-const MONTH_NAMES = ["","Jan","Feb","Mar","Apr","May","Jun",
-                     "Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_NAMES = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 let cataloguePage = 0;
 const PAGE_SIZE = 20;
-
-// ─── Startup ───────────────────────────────────────────────────────────────
 
 window.addEventListener("DOMContentLoaded", () => {
   checkHealth();
@@ -40,12 +38,31 @@ window.addEventListener("DOMContentLoaded", () => {
   range.addEventListener("input", () => {
     document.getElementById("topk-val").textContent = range.value;
   });
+
+  // Update everything when user changes
+  document.getElementById("user-select").addEventListener("change", () => {
+    const userId = document.getElementById("user-select").value;
+
+    // 1. Refresh Recommendations if visible
+    if (!document.getElementById("panel-recs").classList.contains("hidden")) {
+      fetchRecommendations();
+    }
+    // 2. Refresh Analytics if visible
+    if (!document.getElementById("panel-analytics").classList.contains("hidden")) {
+      loadAnalytics();
+    }
+
+    // 3. Update the Hero Title to show the current user
+    if (userId) {
+      document.querySelector(".hero-text h2").textContent = `Fashion Picks for User #${userId}`;
+    }
+  });
 });
 
 // ─── Health check ──────────────────────────────────────────────────────────
 
 async function checkHealth() {
-  const dot  = document.getElementById("status-dot");
+  const dot = document.getElementById("status-dot");
   const text = document.getElementById("status-text");
   try {
     const r = await fetch(`${API}/`);
@@ -77,14 +94,14 @@ async function loadUsers() {
 // ─── Recommendations ───────────────────────────────────────────────────────
 
 async function fetchRecommendations() {
-  const userId    = parseInt(document.getElementById("user-select").value);
-  const topK      = parseInt(document.getElementById("topk-range").value);
-  const monthRaw  = document.getElementById("month-select").value;
-  const month     = monthRaw ? parseInt(monthRaw) : null;
+  const userId = parseInt(document.getElementById("user-select").value);
+  const topK = parseInt(document.getElementById("topk-range").value);
+  const monthRaw = document.getElementById("month-select").value;
+  const month = monthRaw ? parseInt(monthRaw) : null;
 
   if (isNaN(userId)) return;
 
-  const btn  = document.getElementById("recommend-btn");
+  const btn = document.getElementById("recommend-btn");
   const grid = document.getElementById("rec-grid");
   const loader = document.getElementById("rec-loader");
 
@@ -115,9 +132,9 @@ async function fetchRecommendations() {
     loader.classList.add("hidden");
 
     // Update stats
-    document.getElementById("stat-user").textContent    = `#${userId}`;
-    document.getElementById("stat-count").textContent   = data.recommendations.length;
-    document.getElementById("stat-month").textContent   = month ? MONTH_NAMES[month] : "All";
+    document.getElementById("stat-user").textContent = `#${userId}`;
+    document.getElementById("stat-count").textContent = data.recommendations.length;
+    document.getElementById("stat-month").textContent = month ? MONTH_NAMES[month] : "All";
     document.getElementById("stat-latency").textContent = `${latency} ms`;
 
     if (!data.recommendations.length) {
@@ -182,6 +199,21 @@ function renderItemCard(item, index, maxScore, showScore) {
   const icon = GARMENT_ICONS[item.garment_group] || "🏷";
   const delay = `animation-delay:${index * 0.04}s`;
 
+  // Image logic
+  const artId = String(item.article_id).padStart(10, '0');
+  const folder = artId.substring(0, 3);
+  // We use a relative path. If the image doesn't exist, we fallback to icon via CSS/JS
+  const imgPath = `../assets/images/${folder}/${artId}.jpg`;
+
+  const imgHtml = `<img src="${imgPath}" class="item-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">`;
+  const iconHtml = `
+  <img 
+    src="https://via.placeholder.com/300x400/1a1a27/ffffff?text=Fashion+Item"
+    class="item-card-img"
+    style="display:none;"
+  >
+`;
+
   const scoreHtml = showScore && item.score != null ? `
     <div class="score-bar-wrap">
       <div class="score-label">
@@ -198,11 +230,12 @@ function renderItemCard(item, index, maxScore, showScore) {
 
   return `
     <div class="item-card" style="${delay}">
-      <div class="item-card-icon">${icon}</div>
+      ${imgHtml}
+      ${iconHtml}
       <div class="item-card-name">${escHtml(item.prod_name)}</div>
       <div class="item-card-type">${escHtml(item.product_type || "")} · ${escHtml(item.product_group || "")}</div>
       <div class="item-card-tags">
-        ${item.colour  ? `<span class="tag accent2">${escHtml(item.colour)}</span>` : ""}
+        ${item.colour ? `<span class="tag accent2">${escHtml(item.colour)}</span>` : ""}
         ${item.section ? `<span class="tag">${escHtml(item.section)}</span>` : ""}
         ${item.garment_group ? `<span class="tag accent">${escHtml(item.garment_group)}</span>` : ""}
       </div>
@@ -213,15 +246,138 @@ function renderItemCard(item, index, maxScore, showScore) {
 
 function escHtml(str) {
   return String(str)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // ─── Tab switching ─────────────────────────────────────────────────────────
 
 function switchTab(name) {
-  document.getElementById("panel-recs").classList.toggle("hidden",   name !== "recs");
+  document.getElementById("panel-recs").classList.toggle("hidden", name !== "recs");
   document.getElementById("panel-browse").classList.toggle("hidden", name !== "browse");
-  document.getElementById("tab-recs").classList.toggle("active",    name === "recs");
-  document.getElementById("tab-browse").classList.toggle("active",  name === "browse");
+  document.getElementById("panel-analytics").classList.toggle("hidden", name !== "analytics");
+  document.getElementById("panel-train").classList.toggle("hidden", name !== "train");
+
+  document.getElementById("tab-recs").classList.toggle("active", name === "recs");
+  document.getElementById("tab-browse").classList.toggle("active", name === "browse");
+  document.getElementById("tab-analytics").classList.toggle("active", name === "analytics");
+  document.getElementById("tab-train").classList.toggle("active", name === "train");
+
+  if (name === 'analytics') loadAnalytics();
+}
+
+// ─── Analytics ─────────────────────────────────────────────────────────────
+
+async function loadAnalytics() {
+  try {
+    // Load stats
+    const rStats = await fetch(`${API}/analytics/stats`);
+    const stats = await rStats.json();
+    document.getElementById("count-users").textContent = stats.users.toLocaleString();
+    document.getElementById("count-items").textContent = stats.items.toLocaleString();
+    document.getElementById("count-interactions").textContent = stats.interactions.toLocaleString();
+
+    // Load seasonal trends
+    const rTrends = await fetch(`${API}/analytics/seasonal`);
+    const trends = await rTrends.json();
+
+    const traceData = {};
+    trends.forEach(d => {
+      if (!traceData[d.category]) traceData[d.category] = { x: [], y: [], name: d.category, type: 'scatter', mode: 'lines+markers' };
+      traceData[d.category].x.push(d.month);
+      traceData[d.category].y.push(d.count);
+    });
+
+    const layout = {
+      title: 'Top Fashion Categories by Month',
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      font: { color: '#8888aa' },
+      xaxis: { gridcolor: '#2a2a40' },
+      yaxis: { gridcolor: '#2a2a40' },
+      margin: { t: 50, b: 50, l: 50, r: 20 }
+    };
+
+    Plotly.newPlot('chart-seasonal', Object.values(traceData), layout);
+
+    // Load user-specific activity
+    loadUserAnalytics();
+
+  } catch (err) {
+    console.error("Analytics load failed", err);
+  }
+}
+
+// ─── Training ──────────────────────────────────────────────────────────────
+
+async function triggerTraining() {
+  const btn = document.getElementById("train-btn");
+  const progressContainer = document.getElementById("train-progress-container");
+  const progressFill = document.getElementById("train-progress-fill");
+  const statusText = document.getElementById("train-status");
+
+  btn.disabled = true;
+  progressContainer.classList.remove("hidden");
+  progressFill.style.width = "0%";
+  statusText.textContent = "Connecting to server...";
+
+  try {
+    // Simulate progress for UI
+    let progress = 0;
+    const interval = setInterval(() => {
+      if (progress < 90) {
+        progress += Math.random() * 5;
+        progressFill.style.width = `${progress}%`;
+        statusText.textContent = `Processing dataset... (${Math.round(progress)}%)`;
+      }
+    }, 800);
+
+    const r = await fetch(`${API}/train`, { method: 'POST' });
+    clearInterval(interval);
+
+    if (r.ok) {
+      progressFill.style.width = "100%";
+      statusText.textContent = "Neural model trained and loaded!";
+      alert("Success! The Neural model has been updated.");
+    } else {
+      throw new Error("Training failed on server.");
+    }
+  } catch (err) {
+    statusText.textContent = "Error: " + err.message;
+    progressFill.style.backgroundColor = "#f87171";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadUserAnalytics() {
+  const userId = parseInt(document.getElementById("user-select").value);
+  if (isNaN(userId)) return;
+
+  try {
+    const r = await fetch(`${API}/analytics/user/${userId}`);
+    const data = await r.json();
+
+    const trace = {
+      x: data.map(d => d.month),
+      y: data.map(d => d.count),
+      type: 'bar',
+      marker: { color: '#ff6fb0' },
+      name: `User #${userId} History`
+    };
+
+    const layout = {
+      title: `User #${userId}: Purchase History`,
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      font: { color: '#8888aa' },
+      xaxis: { gridcolor: '#2a2a40' },
+      yaxis: { gridcolor: '#2a2a40' },
+      margin: { t: 50, b: 50, l: 50, r: 20 }
+    };
+
+    Plotly.newPlot('chart-user', [trace], layout);
+  } catch (err) {
+    console.error("User analytics failed", err);
+  }
 }
