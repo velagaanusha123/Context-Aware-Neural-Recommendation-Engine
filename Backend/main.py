@@ -174,7 +174,7 @@ def get_stats():
 @app.get("/analytics/seasonal", tags=["Analytics"])
 def get_seasonal_trends():
     try:
-        from Backend.recommender import _CONTEXT
+        from Backend.recommender import _CONTEXT, _ITEM_META
         import pandas as pd
         from datetime import datetime
         
@@ -182,9 +182,13 @@ def get_seasonal_trends():
         if _CONTEXT is None or _CONTEXT.empty:
             return []
 
+        # Map item_idx to product_group to get string names instead of integer encoded values
+        trends_df = _CONTEXT.copy()
+        trends_df['product_group_str'] = trends_df['item_idx'].map(lambda x: _ITEM_META.get(x, {}).get('product_group', 'Unknown'))
+
         # Get top categories per month
         # Using .size() and reset_index to get counts
-        trends = _CONTEXT.groupby(['month', 'product_group_name']).size().reset_index(name='counts')
+        trends = trends_df.groupby(['month', 'product_group_str']).size().reset_index(name='counts')
         
         data = []
         # Month names mapping
@@ -202,7 +206,7 @@ def get_seasonal_trends():
             for _, row in m_data.iterrows():
                 data.append({
                     "month": month_map.get(month_val, str(month_val)),
-                    "category": str(row['product_group_name']),
+                    "category": str(row['product_group_str']),
                     "count": int(row['counts'])
                 })
         return data

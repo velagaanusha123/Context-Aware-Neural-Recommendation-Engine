@@ -78,16 +78,25 @@ def _load_data():
 
     # Build a dict  item_idx -> article metadata
     item_meta: Dict[int, Dict[str, Any]] = {}
-    for idx, row in articles.iterrows():
+    for idx, aid, pname, ptype, pgroup, cgroup, sname, ggroup in zip(
+        articles.index,
+        articles['article_id'],
+        articles['prod_name'],
+        articles['product_type_name'],
+        articles['product_group_name'],
+        articles['colour_group_name'],
+        articles['section_name'],
+        articles['garment_group_name']
+    ):
         item_meta[int(idx)] = {
             "item_idx":           int(idx),
-            "article_id":         int(row["article_id"]),
-            "prod_name":          str(row["prod_name"]),
-            "product_type":       str(row["product_type_name"]),
-            "product_group":      str(row["product_group_name"]),
-            "colour":             str(row["colour_group_name"]),
-            "section":            str(row["section_name"]),
-            "garment_group":      str(row["garment_group_name"]),
+            "article_id":         int(aid),
+            "prod_name":          str(pname),
+            "product_type":       str(ptype),
+            "product_group":      str(pgroup),
+            "colour":             str(cgroup),
+            "section":            str(sname),
+            "garment_group":      str(ggroup),
         }
 
 
