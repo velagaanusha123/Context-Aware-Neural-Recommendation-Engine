@@ -1,7 +1,0 @@
-
-torch
-pandas
-scikit-learn
-faiss-cpu
-numpy
-fastapi
