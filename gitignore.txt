@@ -1,0 +1,28 @@
+# Virtual Environments
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Large ML model files
+*.h5
+*.pt
+*.pth
+
+# System files
+Thumbs.db
+.DS_Store
+
+v/
+
+
+Data/
+*.csv
